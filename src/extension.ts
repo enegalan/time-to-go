@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TimeTracker } from './timeTracker';
 import { StatusBar } from './statusBar';
 import { Notifications } from './notifications';
+import { COMMANDS, CONFIG_NAMES, MESSAGES } from './constants';
 
 let statusBar: StatusBar | null = null;
 let notifications: Notifications | null = null;
@@ -9,7 +10,7 @@ let timeTracker: TimeTracker | null = null;
 let isEnabled: boolean = true;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Time to Go extension activated');
+    console.log(MESSAGES.EXTENSION_ACTIVATED);
 
     timeTracker = new TimeTracker();
     statusBar = new StatusBar(timeTracker);
@@ -20,26 +21,26 @@ export function activate(context: vscode.ExtensionContext) {
         notifications.start();
     }
 
-    const configureCommand = vscode.commands.registerCommand('timeToGo.configure', () => {
-        vscode.commands.executeCommand('workbench.action.openSettings', 'timeToGo');
+    const configureCommand = vscode.commands.registerCommand(COMMANDS.CONFIGURE, () => {
+        vscode.commands.executeCommand(COMMANDS.OPEN_SETTINGS, CONFIG_NAMES.ROOT);
     });
 
-    const toggleCommand = vscode.commands.registerCommand('timeToGo.toggle', () => {
+    const toggleCommand = vscode.commands.registerCommand(COMMANDS.TOGGLE, () => {
         isEnabled = !isEnabled;
         if (isEnabled) {
             if (statusBar) statusBar.start();
             if (notifications) notifications.start();
-            vscode.window.showInformationMessage('Time to Go enabled');
+            vscode.window.showInformationMessage(MESSAGES.ENABLED);
         } else {
             if (statusBar) statusBar.stop();
             if (notifications) notifications.stop();
-            vscode.window.showInformationMessage('Time to Go disabled');
+            vscode.window.showInformationMessage(MESSAGES.DISABLED);
         }
     });
 
-    const statusCommand = vscode.commands.registerCommand('timeToGo.status', () => {
+    const statusCommand = vscode.commands.registerCommand(COMMANDS.STATUS, () => {
         if (!timeTracker) {
-            vscode.window.showInformationMessage('Time to Go is not initialized');
+            vscode.window.showInformationMessage(MESSAGES.NOT_INITIALIZED);
             return;
         }
 
@@ -47,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
         const dayConfig = timeTracker.getCurrentDayConfig();
 
         if (!dayConfig) {
-            vscode.window.showInformationMessage('Today is not a configured work day');
+            vscode.window.showInformationMessage(MESSAGES.NOT_CONFIGURED_DAY);
             return;
         }
 
@@ -55,16 +56,16 @@ export function activate(context: vscode.ExtensionContext) {
             const endTime = timeTracker.getEndTime();
             if (endTime) {
                 vscode.window.showInformationMessage(
-                    `Outside work hours. Today's schedule: ${dayConfig.start} - ${dayConfig.end}`
+                    `${MESSAGES.OUTSIDE_WORK_HOURS}${dayConfig.start} - ${dayConfig.end}`
                 );
             } else {
-                vscode.window.showInformationMessage('No schedule configured for today');
+                vscode.window.showInformationMessage(MESSAGES.NO_SCHEDULE);
             }
             return;
         }
 
         const { hours, minutes, seconds } = timeRemaining;
-        const message = `Time remaining: ${hours}h ${minutes}m ${seconds}s\nEnd time: ${timeRemaining.endTime.toLocaleTimeString()}`;
+        const message = `${MESSAGES.TIME_REMAINING}${hours}h ${minutes}m ${seconds}s${MESSAGES.END_TIME_LABEL}${timeRemaining.endTime.toLocaleTimeString()}`;
         vscode.window.showInformationMessage(message);
     });
 
@@ -73,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(statusCommand);
 
     vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration('timeToGo')) {
+        if (e.affectsConfiguration(CONFIG_NAMES.ROOT)) {
             if (timeTracker) timeTracker.refreshConfig();
             if (statusBar) statusBar.refreshConfig();
             if (notifications) notifications.refreshConfig();

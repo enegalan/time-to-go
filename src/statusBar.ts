@@ -1,72 +1,129 @@
 import * as vscode from 'vscode';
 import { TimeTracker, TimeRemaining } from './timeTracker';
+import {
+    CONFIG_NAMES,
+    TIME_FORMATS,
+    TIME_CONSTANTS,
+    STATUS_BAR,
+    TIME_DISPLAY,
+    COLOR_THRESHOLDS,
+    STATUS_BAR_COLORS,
+    DEFAULT_VALUES,
+    COMMANDS,
+} from './constants';
 
-export type TimeFormat = 'human-readable' | 'human-readable-no-seconds' | 'time-format' | 'time-format-no-seconds';
+export type TimeFormat = typeof TIME_FORMATS.HUMAN_READABLE | typeof TIME_FORMATS.TIME_FORMAT;
 
 export class StatusBar {
     private statusBarItem: vscode.StatusBarItem;
     private timeTracker: TimeTracker;
     private config: vscode.WorkspaceConfiguration;
     private updateInterval: NodeJS.Timeout | null = null;
-    private updateFrequency: number = 60000;
+    private flashInterval: NodeJS.Timeout | null = null;
+    private updateFrequency: number = TIME_CONSTANTS.DEFAULT_UPDATE_INTERVAL_MS;
+    private flashState: boolean = true;
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
-        this.config = vscode.workspace.getConfiguration('timeToGo');
-        this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBarItem.command = 'timeToGo.status';
+        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.statusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            STATUS_BAR.PRIORITY
+        );
+        this.statusBarItem.command = COMMANDS.STATUS;
         this.updateFrequencyFromFormat();
     }
 
     private updateFrequencyFromFormat(): void {
-        const format = this.config.get<TimeFormat>('timeFormat', 'human-readable-no-seconds');
-        const includesSeconds = format === 'human-readable' || format === 'time-format';
-        this.updateFrequency = includesSeconds ? 1000 : 60000;
+        const showSeconds = this.config.get<boolean>(CONFIG_NAMES.SHOW_SECONDS, DEFAULT_VALUES.SHOW_SECONDS);
+        const flashTimeSeparators = this.config.get<boolean>(
+            CONFIG_NAMES.FLASH_TIME_SEPARATORS,
+            DEFAULT_VALUES.FLASH_TIME_SEPARATORS
+        );
+        this.updateFrequency =
+            showSeconds || flashTimeSeparators
+                ? TIME_CONSTANTS.UPDATE_INTERVAL_WITH_SECONDS_MS
+                : TIME_CONSTANTS.DEFAULT_UPDATE_INTERVAL_MS;
     }
 
     private formatTime(timeRemaining: TimeRemaining, format: TimeFormat): string {
         const { hours, minutes, seconds } = timeRemaining;
+        const showHours = this.config.get<boolean>(CONFIG_NAMES.SHOW_HOURS, DEFAULT_VALUES.SHOW_HOURS);
+        const showMinutes = this.config.get<boolean>(CONFIG_NAMES.SHOW_MINUTES, DEFAULT_VALUES.SHOW_MINUTES);
+        const showSeconds = this.config.get<boolean>(CONFIG_NAMES.SHOW_SECONDS, DEFAULT_VALUES.SHOW_SECONDS);
+        const timeSeparator = this.config.get<string>(CONFIG_NAMES.TIME_SEPARATOR, DEFAULT_VALUES.TIME_SEPARATOR);
+        const flashTimeSeparators = this.config.get<boolean>(
+            CONFIG_NAMES.FLASH_TIME_SEPARATORS,
+            DEFAULT_VALUES.FLASH_TIME_SEPARATORS
+        );
+        const timeSeparatorOff = this.config.get<string>(
+            CONFIG_NAMES.TIME_SEPARATOR_OFF,
+            DEFAULT_VALUES.TIME_SEPARATOR_OFF
+        );
+
+        let separator = timeSeparator;
+        if (flashTimeSeparators && format === TIME_FORMATS.TIME_FORMAT) {
+            separator = this.flashState ? timeSeparator : timeSeparatorOff;
+        }
 
         switch (format) {
-            case 'human-readable':
+            case TIME_FORMATS.HUMAN_READABLE:
                 const parts: string[] = [];
-                if (hours > 0) parts.push(`${hours}h`);
-                if (minutes > 0) parts.push(`${minutes}m`);
-                if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
-                return parts.join(' ');
+                if (showHours && hours > TIME_CONSTANTS.ZERO_TIME_VALUE) parts.push(`${hours}${TIME_DISPLAY.HOUR_SUFFIX}`);
+                if (showMinutes && minutes > TIME_CONSTANTS.ZERO_TIME_VALUE) parts.push(`${minutes}${TIME_DISPLAY.MINUTE_SUFFIX}`);
+                if (showSeconds && (seconds > TIME_CONSTANTS.ZERO_TIME_VALUE || parts.length === TIME_CONSTANTS.ZERO_TIME_VALUE))
+                    parts.push(`${seconds}${TIME_DISPLAY.SECOND_SUFFIX}`);
+                if (parts.length === TIME_CONSTANTS.ZERO_TIME_VALUE) {
+                    if (showHours) return TIME_DISPLAY.ZERO_HOURS;
+                    if (showMinutes) return TIME_DISPLAY.ZERO_MINUTES;
+                    if (showSeconds) return TIME_DISPLAY.ZERO_SECONDS;
+                    return TIME_DISPLAY.ZERO_MINUTES;
+                }
+                return parts.join(TIME_DISPLAY.HUMAN_READABLE_SEPARATOR);
 
-            case 'human-readable-no-seconds':
-                const partsNoSec: string[] = [];
-                if (hours > 0) partsNoSec.push(`${hours}h`);
-                if (minutes > 0) partsNoSec.push(`${minutes}m`);
-                return partsNoSec.length > 0 ? partsNoSec.join(' ') : '0m';
-
-            case 'time-format':
-                return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            case 'time-format-no-seconds':
-                return `${hours}:${String(minutes).padStart(2, '0')}`;
+            case TIME_FORMATS.TIME_FORMAT:
+                const timeParts: string[] = [];
+                if (showHours) {
+                    timeParts.push(String(hours));
+                }
+                if (showMinutes) {
+                    const minStr = showHours
+                        ? String(minutes).padStart(TIME_DISPLAY.PADDING_LENGTH, TIME_DISPLAY.PADDING_CHAR)
+                        : String(minutes);
+                    timeParts.push(minStr);
+                }
+                if (showSeconds) {
+                    const secStr =
+                        showHours || showMinutes
+                            ? String(seconds).padStart(TIME_DISPLAY.PADDING_LENGTH, TIME_DISPLAY.PADDING_CHAR)
+                            : String(seconds);
+                    timeParts.push(secStr);
+                }
+                if (timeParts.length === TIME_CONSTANTS.ZERO_TIME_VALUE) {
+                    return TIME_DISPLAY.ZERO_TIME;
+                }
+                return timeParts.join(separator);
 
             default:
-                return `${hours}h ${minutes}m`;
+                return `${hours}${TIME_DISPLAY.HOUR_SUFFIX} ${minutes}${TIME_DISPLAY.MINUTE_SUFFIX}`;
         }
     }
 
     private getStatusBarColor(timeRemaining: TimeRemaining): string {
-        const totalHours = timeRemaining.hours + timeRemaining.minutes / 60;
-        
-        if (totalHours > 2) {
-            return 'statusBar.foreground';
-        } else if (totalHours > 1) {
-            return 'statusBarItem.warningForeground';
+        const totalHours = timeRemaining.hours + timeRemaining.minutes / TIME_CONSTANTS.MINUTES_PER_HOUR;
+
+        if (totalHours > COLOR_THRESHOLDS.NORMAL_HOURS) {
+            return STATUS_BAR_COLORS.NORMAL;
+        } else if (totalHours > COLOR_THRESHOLDS.WARNING_HOURS) {
+            return STATUS_BAR_COLORS.WARNING;
         } else {
-            return 'statusBarItem.errorForeground';
+            return STATUS_BAR_COLORS.ERROR;
         }
     }
 
     public update(): void {
         const timeRemaining = this.timeTracker.getTimeRemaining();
-        const format = this.config.get<TimeFormat>('timeFormat', 'human-readable-no-seconds');
+        const format = this.config.get<TimeFormat>(CONFIG_NAMES.TIME_FORMAT, DEFAULT_VALUES.TIME_FORMAT);
 
         if (!timeRemaining || !timeRemaining.isWorkHours) {
             this.statusBarItem.hide();
@@ -74,9 +131,9 @@ export class StatusBar {
         }
 
         const formattedTime = this.formatTime(timeRemaining, format);
-        this.statusBarItem.text = `$(clock) Time to go: ${formattedTime}`;
+        this.statusBarItem.text = `${STATUS_BAR.TEXT_PREFIX}${formattedTime}`;
         this.statusBarItem.color = this.getStatusBarColor(timeRemaining);
-        this.statusBarItem.tooltip = `End time: ${timeRemaining.endTime.toLocaleTimeString()}`;
+        this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${timeRemaining.endTime.toLocaleTimeString()}`;
         this.statusBarItem.show();
     }
 
@@ -85,6 +142,19 @@ export class StatusBar {
         this.updateInterval = setInterval(() => {
             this.update();
         }, this.updateFrequency);
+
+        const flashTimeSeparators = this.config.get<boolean>(
+            CONFIG_NAMES.FLASH_TIME_SEPARATORS,
+            DEFAULT_VALUES.FLASH_TIME_SEPARATORS
+        );
+        const format = this.config.get<TimeFormat>(CONFIG_NAMES.TIME_FORMAT, DEFAULT_VALUES.TIME_FORMAT);
+        if (flashTimeSeparators && format === TIME_FORMATS.TIME_FORMAT) {
+            this.flashState = true;
+            this.flashInterval = setInterval(() => {
+                this.flashState = !this.flashState;
+                this.update();
+            }, TIME_CONSTANTS.FLASH_INTERVAL_MS);
+        }
     }
 
     public stop(): void {
@@ -92,11 +162,15 @@ export class StatusBar {
             clearInterval(this.updateInterval);
             this.updateInterval = null;
         }
+        if (this.flashInterval) {
+            clearInterval(this.flashInterval);
+            this.flashInterval = null;
+        }
         this.statusBarItem.hide();
     }
 
     public refreshConfig(): void {
-        this.config = vscode.workspace.getConfiguration('timeToGo');
+        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
         this.updateFrequencyFromFormat();
         if (this.updateInterval) {
             this.stop();

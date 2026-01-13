@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { CONFIG_NAMES, DAY_NAMES, TIME_CONSTANTS, DEFAULT_VALUES, TIME_DISPLAY } from './constants';
 
 export interface DayConfig {
     enabled: boolean;
@@ -19,18 +20,17 @@ export class TimeTracker {
     private config: vscode.WorkspaceConfiguration;
 
     constructor() {
-        this.config = vscode.workspace.getConfiguration('timeToGo');
+        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
     }
 
     public getCurrentDayConfig(): DayConfig | null {
         const now = new Date();
         const dayOfWeek = now.getDay();
-        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayName = dayNames[dayOfWeek];
+        const dayName = DAY_NAMES[dayOfWeek];
 
-        const enabled = this.config.get<boolean>(`${dayName}.enabled`, false);
-        const start = this.config.get<string>(`${dayName}.start`, '09:00');
-        const end = this.config.get<string>(`${dayName}.end`, '18:00');
+        const enabled = this.config.get<boolean>(`${dayName}.enabled`, DEFAULT_VALUES.DAY_ENABLED);
+        const start = this.config.get<string>(`${dayName}.start`, DEFAULT_VALUES.DAY_START_TIME);
+        const end = this.config.get<string>(`${dayName}.end`, DEFAULT_VALUES.DAY_END_TIME);
 
         if (!enabled) {
             return null;
@@ -40,9 +40,9 @@ export class TimeTracker {
     }
 
     public parseTime(timeStr: string): { hours: number; minutes: number } {
-        const parts = timeStr.split(':');
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
+        const parts = timeStr.split(TIME_DISPLAY.DEFAULT_TIME_SEPARATOR);
+        const hours = parseInt(parts[0], TIME_CONSTANTS.PARSE_INT_BASE);
+        const minutes = parseInt(parts[1], TIME_CONSTANTS.PARSE_INT_BASE);
         return { hours, minutes };
     }
 
@@ -57,30 +57,30 @@ export class TimeTracker {
         const { hours: endHours, minutes: endMinutes } = this.parseTime(dayConfig.end);
 
         const startTime = new Date(now);
-        startTime.setHours(startHours, startMinutes, 0, 0);
+        startTime.setHours(startHours, startMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
 
         const endTime = new Date(now);
-        endTime.setHours(endHours, endMinutes, 0, 0);
+        endTime.setHours(endHours, endMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
 
         const isWorkHours = now >= startTime && now < endTime;
 
         if (!isWorkHours) {
             return {
-                totalSeconds: 0,
-                hours: 0,
-                minutes: 0,
-                seconds: 0,
+                totalSeconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
+                hours: TIME_CONSTANTS.ZERO_TIME_VALUE,
+                minutes: TIME_CONSTANTS.ZERO_TIME_VALUE,
+                seconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
                 endTime,
                 isWorkHours: false
             };
         }
 
         const diffMs = endTime.getTime() - now.getTime();
-        const totalSeconds = Math.floor(diffMs / 1000);
+        const totalSeconds = Math.floor(diffMs / TIME_CONSTANTS.MILLISECONDS_PER_SECOND);
 
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+        const hours = Math.floor(totalSeconds / TIME_CONSTANTS.SECONDS_PER_HOUR);
+        const minutes = Math.floor((totalSeconds % TIME_CONSTANTS.SECONDS_PER_HOUR) / TIME_CONSTANTS.SECONDS_PER_MINUTE);
+        const seconds = totalSeconds % TIME_CONSTANTS.SECONDS_PER_MINUTE;
 
         return {
             totalSeconds,
@@ -106,12 +106,12 @@ export class TimeTracker {
         const now = new Date();
         const { hours: endHours, minutes: endMinutes } = this.parseTime(dayConfig.end);
         const endTime = new Date(now);
-        endTime.setHours(endHours, endMinutes, 0, 0);
+        endTime.setHours(endHours, endMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
 
         return endTime;
     }
 
     public refreshConfig(): void {
-        this.config = vscode.workspace.getConfiguration('timeToGo');
+        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
     }
 }

@@ -126,18 +126,71 @@
           "type": "string",
           "enum": [
             "human-readable",
-            "human-readable-no-seconds",
-            "time-format",
-            "time-format-no-seconds"
+            "time-format"
           ],
           "enumDescriptions": [
-            "Human readable with seconds (1h 30m 20s)",
-            "Human readable without seconds (1h 30m)",
-            "Time format with seconds (1:30:20)",
-            "Time format without seconds (1:30)"
+            "Human Readable (1h 30m)",
+            "Time Format (1:30)"
           ],
-          "default": "human-readable-no-seconds",
+          "default": "human-readable",
           "description": "Display format for remaining time"
+        },
+        "timeToGo.showHours": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show hours in time display"
+        },
+        "timeToGo.showMinutes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show minutes in time display"
+        },
+        "timeToGo.showSeconds": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show seconds in time display"
+        },
+        "timeToGo.timeSeparator": {
+          "type": "string",
+          "default": ":",
+          "description": "Character used as separator in time format (e.g., ':' for 1:30)"
+        },
+        "timeToGo.flashTimeSeparators": {
+          "type": "boolean",
+          "default": false,
+          "description": "Flash time separators on and off every second"
+        },
+        "timeToGo.timeSeparatorOff": {
+          "type": "string",
+          "default": " ",
+          "description": "Character used when time separator is off during flash"
+        },
+        "timeToGo.periodicNotifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Notification message to display"
+              },
+              "interval": {
+                "type": "number",
+                "description": "Interval in seconds between notifications"
+              },
+              "days": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+                },
+                "description": "Days of the week when this notification should be shown"
+              }
+            },
+            "required": ["message", "interval", "days"]
+          },
+          "default": [],
+          "description": "Periodic notifications with custom messages, intervals, and days"
         },
         "timeToGo.notificationMinutes": {
           "type": "number",
