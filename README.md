@@ -1,6 +1,6 @@
 # Time to Go
 
-A VS Code extension that displays the remaining time until your end time in the status bar.
+A VSCode extension that displays the remaining time until your end time in the status bar.
 
 ## Features
 
@@ -8,7 +8,6 @@ A VS Code extension that displays the remaining time until your end time in the 
 - Real-time counter in the status bar
 - Multiple configurable display formats
 - Notifications before end time
-- Dynamic colors based on remaining time
 
 ## Configuration
 

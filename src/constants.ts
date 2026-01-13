@@ -71,17 +71,6 @@ export const TIME_DISPLAY = {
     ZERO_TIME: '0',
 } as const;
 
-export const COLOR_THRESHOLDS = {
-    NORMAL_HOURS: 2,
-    WARNING_HOURS: 1,
-} as const;
-
-export const STATUS_BAR_COLORS = {
-    NORMAL: 'statusBar.foreground',
-    WARNING: 'statusBarItem.warningForeground',
-    ERROR: 'statusBarItem.errorForeground',
-} as const;
-
 export const DEFAULT_VALUES = {
     TIME_FORMAT: TIME_FORMATS.HUMAN_READABLE,
     SHOW_HOURS: true,

@@ -6,8 +6,6 @@ import {
     TIME_CONSTANTS,
     STATUS_BAR,
     TIME_DISPLAY,
-    COLOR_THRESHOLDS,
-    STATUS_BAR_COLORS,
     DEFAULT_VALUES,
     COMMANDS,
 } from './constants';
@@ -109,18 +107,6 @@ export class StatusBar {
         }
     }
 
-    private getStatusBarColor(timeRemaining: TimeRemaining): string {
-        const totalHours = timeRemaining.hours + timeRemaining.minutes / TIME_CONSTANTS.MINUTES_PER_HOUR;
-
-        if (totalHours > COLOR_THRESHOLDS.NORMAL_HOURS) {
-            return STATUS_BAR_COLORS.NORMAL;
-        } else if (totalHours > COLOR_THRESHOLDS.WARNING_HOURS) {
-            return STATUS_BAR_COLORS.WARNING;
-        } else {
-            return STATUS_BAR_COLORS.ERROR;
-        }
-    }
-
     public update(): void {
         const timeRemaining = this.timeTracker.getTimeRemaining();
         const format = this.config.get<TimeFormat>(CONFIG_NAMES.TIME_FORMAT, DEFAULT_VALUES.TIME_FORMAT);
@@ -132,7 +118,6 @@ export class StatusBar {
 
         const formattedTime = this.formatTime(timeRemaining, format);
         this.statusBarItem.text = `${STATUS_BAR.TEXT_PREFIX}${formattedTime}`;
-        this.statusBarItem.color = this.getStatusBarColor(timeRemaining);
         this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${timeRemaining.endTime.toLocaleTimeString()}`;
         this.statusBarItem.show();
     }

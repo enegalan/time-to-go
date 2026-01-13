@@ -21,6 +21,7 @@ export class Notifications {
     private endTimeNotificationSent: boolean = false;
     private checkInterval: NodeJS.Timeout | null = null;
     private periodicNotificationLastShown: Map<number, number> = new Map();
+    private wasInWorkHours: boolean = false;
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
@@ -36,11 +37,35 @@ export class Notifications {
     }
 
     public check(timeRemaining: TimeRemaining | null): void {
-        if (!this.shouldShowNotification() || !timeRemaining || !timeRemaining.isWorkHours) {
+        if (!this.shouldShowNotification()) {
             this.notificationSent = false;
             this.endTimeNotificationSent = false;
+            this.wasInWorkHours = false;
             return;
         }
+
+        if (!timeRemaining) {
+            this.notificationSent = false;
+            this.endTimeNotificationSent = false;
+            this.wasInWorkHours = false;
+            return;
+        }
+
+        const isCurrentlyInWorkHours = timeRemaining.isWorkHours;
+        const transitionedFromWorkHours = this.wasInWorkHours && !isCurrentlyInWorkHours;
+
+        if (transitionedFromWorkHours && !this.endTimeNotificationSent) {
+            this.showEndTimeNotification();
+            this.endTimeNotificationSent = true;
+        }
+
+        if (!isCurrentlyInWorkHours) {
+            this.notificationSent = false;
+            this.wasInWorkHours = false;
+            return;
+        }
+
+        this.wasInWorkHours = true;
 
         const notificationMinutes = this.getNotificationMinutes();
         const totalMinutes = timeRemaining.hours * TIME_CONSTANTS.MINUTES_PER_HOUR + timeRemaining.minutes;
@@ -114,12 +139,14 @@ export class Notifications {
         }
         this.notificationSent = false;
         this.endTimeNotificationSent = false;
+        this.wasInWorkHours = false;
     }
 
     public refreshConfig(): void {
         this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
         this.notificationSent = false;
         this.endTimeNotificationSent = false;
+        this.wasInWorkHours = false;
         this.periodicNotificationLastShown.clear();
     }
 
