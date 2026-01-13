@@ -1,0 +1,189 @@
+{
+  "name": "time-to-go",
+  "displayName": "Time to Go",
+  "description": "Shows the remaining time until your end time in the status bar",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Time to Go",
+      "properties": {
+        "timeToGo.monday.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schedule for Monday"
+        },
+        "timeToGo.monday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Monday (format HH:MM)"
+        },
+        "timeToGo.monday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Monday (format HH:MM)"
+        },
+        "timeToGo.tuesday.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schedule for Tuesday"
+        },
+        "timeToGo.tuesday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Tuesday (format HH:MM)"
+        },
+        "timeToGo.tuesday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Tuesday (format HH:MM)"
+        },
+        "timeToGo.wednesday.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schedule for Wednesday"
+        },
+        "timeToGo.wednesday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Wednesday (format HH:MM)"
+        },
+        "timeToGo.wednesday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Wednesday (format HH:MM)"
+        },
+        "timeToGo.thursday.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schedule for Thursday"
+        },
+        "timeToGo.thursday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Thursday (format HH:MM)"
+        },
+        "timeToGo.thursday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Thursday (format HH:MM)"
+        },
+        "timeToGo.friday.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schedule for Friday"
+        },
+        "timeToGo.friday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Friday (format HH:MM)"
+        },
+        "timeToGo.friday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Friday (format HH:MM)"
+        },
+        "timeToGo.saturday.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable schedule for Saturday"
+        },
+        "timeToGo.saturday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Saturday (format HH:MM)"
+        },
+        "timeToGo.saturday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Saturday (format HH:MM)"
+        },
+        "timeToGo.sunday.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable schedule for Sunday"
+        },
+        "timeToGo.sunday.start": {
+          "type": "string",
+          "default": "09:00",
+          "description": "Start time for Sunday (format HH:MM)"
+        },
+        "timeToGo.sunday.end": {
+          "type": "string",
+          "default": "18:00",
+          "description": "End time for Sunday (format HH:MM)"
+        },
+        "timeToGo.timeFormat": {
+          "type": "string",
+          "enum": [
+            "human-readable",
+            "human-readable-no-seconds",
+            "time-format",
+            "time-format-no-seconds"
+          ],
+          "enumDescriptions": [
+            "Human readable with seconds (1h 30m 20s)",
+            "Human readable without seconds (1h 30m)",
+            "Time format with seconds (1:30:20)",
+            "Time format without seconds (1:30)"
+          ],
+          "default": "human-readable-no-seconds",
+          "description": "Display format for remaining time"
+        },
+        "timeToGo.notificationMinutes": {
+          "type": "number",
+          "default": 30,
+          "description": "Minutes before end time to show notification"
+        },
+        "timeToGo.notificationsEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable notifications before end time"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "timeToGo.configure",
+        "title": "Time to Go: Configure Schedule"
+      },
+      {
+        "command": "timeToGo.toggle",
+        "title": "Time to Go: Toggle"
+      },
+      {
+        "command": "timeToGo.status",
+        "title": "Time to Go: Show Status"
+      }
+    ],
+    "menus": {
+      "statusbar": [
+        {
+          "command": "timeToGo.status",
+          "when": "true"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && vsce package",
+    "dev": "npm run watch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  }
+}
