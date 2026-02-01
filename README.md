@@ -1,5 +1,7 @@
 # Time to Go
 
+![Time to Go](images/icon.png)
+
 A VSCode extension that displays the remaining time until your end time in the status bar.
 
 ## Features
