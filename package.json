@@ -2,7 +2,7 @@
   "name": "time-to-go",
   "displayName": "Time to Go",
   "description": "Shows the remaining time until your end time in the status bar",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "enegalan",
   "license": "MIT",
   "repository": {
@@ -202,12 +202,24 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+                  "enum": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday"
+                  ]
                 },
                 "description": "Days of the week when this notification should be shown"
               }
             },
-            "required": ["message", "interval", "days"]
+            "required": [
+              "message",
+              "interval",
+              "days"
+            ]
           },
           "default": [],
           "description": "Periodic notifications with custom messages, intervals, and days"
