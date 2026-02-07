@@ -12,6 +12,8 @@ let isEnabled: boolean = true;
 export function activate(context: vscode.ExtensionContext) {
     console.log(MESSAGES.EXTENSION_ACTIVATED);
 
+    isEnabled = context.globalState.get<boolean>('enabled', true);
+
     timeTracker = new TimeTracker();
     statusBar = new StatusBar(timeTracker);
     notifications = new Notifications(timeTracker);
@@ -27,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const toggleCommand = vscode.commands.registerCommand(COMMANDS.TOGGLE, () => {
         isEnabled = !isEnabled;
+        void context.globalState.update('enabled', isEnabled);
         if (isEnabled) {
             if (statusBar) statusBar.start();
             if (notifications) notifications.start();
@@ -98,7 +101,5 @@ export function deactivate() {
         notifications.dispose();
         notifications = null;
     }
-    if (timeTracker) {
-        timeTracker = null;
-    }
+    timeTracker = null;
 }

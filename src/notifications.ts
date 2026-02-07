@@ -124,12 +124,27 @@ export class Notifications {
         });
     }
 
+    private getCheckIntervalMs(): number {
+        const periodicNotifications = this.config.get<PeriodicNotification[]>(
+            CONFIG_NAMES.PERIODIC_NOTIFICATIONS,
+            []
+        );
+        if (!periodicNotifications || periodicNotifications.length === 0) {
+            return TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS;
+        }
+        const minIntervalSec = Math.min(...periodicNotifications.map((n) => n.interval));
+        const minIntervalMs = minIntervalSec * TIME_CONSTANTS.MILLISECONDS_PER_SECOND;
+        const minCheckMs = 1000;
+        return Math.min(TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS, Math.max(minCheckMs, minIntervalMs));
+    }
+
     public start(): void {
+        const checkIntervalMs = this.getCheckIntervalMs();
         this.checkInterval = setInterval(() => {
             const timeRemaining = this.timeTracker.getTimeRemaining();
             this.check(timeRemaining);
             this.checkPeriodicNotifications();
-        }, TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS);
+        }, checkIntervalMs);
     }
 
     public stop(): void {

@@ -122,12 +122,13 @@ export class StatusBar {
         this.statusBarItem.show();
     }
 
-    public start(): void {
-        this.update();
+    private startUpdateInterval(): void {
         this.updateInterval = setInterval(() => {
             this.update();
         }, this.updateFrequency);
+    }
 
+    private startFlashIntervalIfNeeded(): void {
         const flashTimeSeparators = this.config.get<boolean>(
             CONFIG_NAMES.FLASH_TIME_SEPARATORS,
             DEFAULT_VALUES.FLASH_TIME_SEPARATORS
@@ -140,6 +141,12 @@ export class StatusBar {
                 this.update();
             }, TIME_CONSTANTS.FLASH_INTERVAL_MS);
         }
+    }
+
+    public start(): void {
+        this.update();
+        this.startUpdateInterval();
+        this.startFlashIntervalIfNeeded();
     }
 
     public stop(): void {
@@ -157,10 +164,20 @@ export class StatusBar {
     public refreshConfig(): void {
         this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
         this.updateFrequencyFromFormat();
+        const wasRunning = this.updateInterval !== null;
         if (this.updateInterval) {
-            this.stop();
-            this.start();
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
         }
+        if (this.flashInterval) {
+            clearInterval(this.flashInterval);
+            this.flashInterval = null;
+        }
+        if (wasRunning) {
+            this.startUpdateInterval();
+            this.startFlashIntervalIfNeeded();
+        }
+        this.update();
     }
 
     public dispose(): void {
