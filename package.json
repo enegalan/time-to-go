@@ -2,7 +2,7 @@
   "name": "time-to-go",
   "displayName": "Time to Go",
   "description": "Shows the remaining time until your end time in the status bar",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "enegalan",
   "license": "MIT",
   "repository": {
