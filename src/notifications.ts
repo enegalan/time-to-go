@@ -3,7 +3,6 @@ import { TimeTracker, TimeRemaining } from './timeTracker';
 import {
     CONFIG_NAMES,
     TIME_CONSTANTS,
-    DAY_NAMES,
     DEFAULT_VALUES,
     MESSAGES,
 } from './constants';
@@ -22,10 +21,12 @@ export class Notifications {
     private checkInterval: NodeJS.Timeout | null = null;
     private periodicNotificationLastShown: Map<number, number> = new Map();
     private wasInWorkHours: boolean = false;
+    private cachedPeriodicNotifications: PeriodicNotification[] = [];
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
         this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.refreshPeriodicNotificationsCache();
     }
 
     private shouldShowNotification(): boolean {
@@ -34,6 +35,11 @@ export class Notifications {
 
     private getNotificationMinutes(): number {
         return this.config.get<number>(CONFIG_NAMES.NOTIFICATION_MINUTES, DEFAULT_VALUES.NOTIFICATION_MINUTES);
+    }
+
+    private refreshPeriodicNotificationsCache(): void {
+        const value = this.config.get<PeriodicNotification[]>(CONFIG_NAMES.PERIODIC_NOTIFICATIONS, []);
+        this.cachedPeriodicNotifications = Array.isArray(value) ? value : [];
     }
 
     public check(timeRemaining: TimeRemaining | null): void {
@@ -90,22 +96,13 @@ export class Notifications {
         vscode.window.showInformationMessage(MESSAGES.TIME_TO_GO);
     }
 
-    private getCurrentDayName(): string {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        return DAY_NAMES[dayOfWeek];
-    }
-
     private checkPeriodicNotifications(): void {
-        const periodicNotifications = this.config.get<PeriodicNotification[]>(
-            CONFIG_NAMES.PERIODIC_NOTIFICATIONS,
-            []
-        );
-        if (!periodicNotifications || periodicNotifications.length === TIME_CONSTANTS.ZERO_TIME_VALUE) {
+        const periodicNotifications = this.cachedPeriodicNotifications;
+        if (periodicNotifications.length === 0) {
             return;
         }
 
-        const currentDay = this.getCurrentDayName();
+        const currentDay = this.timeTracker.getCurrentDayName();
         const now = Date.now();
 
         periodicNotifications.forEach((notification, index) => {
@@ -125,11 +122,8 @@ export class Notifications {
     }
 
     private getCheckIntervalMs(): number {
-        const periodicNotifications = this.config.get<PeriodicNotification[]>(
-            CONFIG_NAMES.PERIODIC_NOTIFICATIONS,
-            []
-        );
-        if (!periodicNotifications || periodicNotifications.length === 0) {
+        const periodicNotifications = this.cachedPeriodicNotifications;
+        if (periodicNotifications.length === 0) {
             return TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS;
         }
         const minIntervalSec = Math.min(...periodicNotifications.map((n) => n.interval));
@@ -139,6 +133,7 @@ export class Notifications {
     }
 
     public start(): void {
+        this.refreshPeriodicNotificationsCache();
         const checkIntervalMs = this.getCheckIntervalMs();
         this.checkInterval = setInterval(() => {
             const timeRemaining = this.timeTracker.getTimeRemaining();
@@ -159,6 +154,7 @@ export class Notifications {
 
     public refreshConfig(): void {
         this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.refreshPeriodicNotificationsCache();
         this.notificationSent = false;
         this.endTimeNotificationSent = false;
         this.wasInWorkHours = false;

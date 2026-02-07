@@ -14,6 +14,8 @@ export interface TimeRemaining {
     seconds: number;
     endTime: Date;
     isWorkHours: boolean;
+    start?: string;
+    end?: string;
 }
 
 export class TimeTracker {
@@ -23,9 +25,9 @@ export class TimeTracker {
         this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
     }
 
-    public getCurrentDayConfig(): DayConfig | null {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
+    public getCurrentDayConfig(now?: Date): DayConfig | null {
+        const date = now ?? new Date();
+        const dayOfWeek = date.getDay();
         const dayName = DAY_NAMES[dayOfWeek];
 
         const enabled = this.config.get<boolean>(`${dayName}.enabled`, DEFAULT_VALUES.DAY_ENABLED);
@@ -39,43 +41,51 @@ export class TimeTracker {
         return { enabled, start, end };
     }
 
-    public parseTime(timeStr: string): { hours: number; minutes: number } {
+    public getCurrentDayName(now?: Date): string {
+        const date = now ?? new Date();
+        return DAY_NAMES[date.getDay()];
+    }
+
+    public static parseTime(timeStr: string): { hours: number; minutes: number } {
         const parts = timeStr.split(TIME_DISPLAY.DEFAULT_TIME_SEPARATOR);
         const hours = parseInt(parts[0], TIME_CONSTANTS.PARSE_INT_BASE);
         const minutes = parseInt(parts[1], TIME_CONSTANTS.PARSE_INT_BASE);
         return { hours, minutes };
     }
 
-    public getTimeRemaining(): TimeRemaining | null {
-        const dayConfig = this.getCurrentDayConfig();
+    public getTimeRemaining(now?: Date): TimeRemaining | null {
+        const date = now ?? new Date();
+        const dayConfig = this.getCurrentDayConfig(date);
         if (!dayConfig) {
             return null;
         }
 
-        const now = new Date();
-        const { hours: startHours, minutes: startMinutes } = this.parseTime(dayConfig.start);
-        const { hours: endHours, minutes: endMinutes } = this.parseTime(dayConfig.end);
+        const { hours: startHours, minutes: startMinutes } = TimeTracker.parseTime(dayConfig.start);
+        const { hours: endHours, minutes: endMinutes } = TimeTracker.parseTime(dayConfig.end);
 
-        const startTime = new Date(now);
+        const startTime = new Date(date);
         startTime.setHours(startHours, startMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
 
-        const endTime = new Date(now);
+        const endTime = new Date(date);
         endTime.setHours(endHours, endMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
 
-        const isWorkHours = now >= startTime && now < endTime;
+        const isWorkHours = date >= startTime && date < endTime;
+        const base = {
+            totalSeconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
+            hours: TIME_CONSTANTS.ZERO_TIME_VALUE,
+            minutes: TIME_CONSTANTS.ZERO_TIME_VALUE,
+            seconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
+            endTime,
+            isWorkHours,
+            start: dayConfig.start,
+            end: dayConfig.end
+        };
 
         if (!isWorkHours) {
-            return {
-                totalSeconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
-                hours: TIME_CONSTANTS.ZERO_TIME_VALUE,
-                minutes: TIME_CONSTANTS.ZERO_TIME_VALUE,
-                seconds: TIME_CONSTANTS.ZERO_TIME_VALUE,
-                endTime,
-                isWorkHours: false
-            };
+            return base;
         }
 
-        const diffMs = endTime.getTime() - now.getTime();
+        const diffMs = endTime.getTime() - date.getTime();
         const totalSeconds = Math.floor(diffMs / TIME_CONSTANTS.MILLISECONDS_PER_SECOND);
 
         const hours = Math.floor(totalSeconds / TIME_CONSTANTS.SECONDS_PER_HOUR);
@@ -83,11 +93,11 @@ export class TimeTracker {
         const seconds = totalSeconds % TIME_CONSTANTS.SECONDS_PER_MINUTE;
 
         return {
+            ...base,
             totalSeconds,
             hours,
             minutes,
             seconds,
-            endTime,
             isWorkHours: true
         };
     }
@@ -97,18 +107,9 @@ export class TimeTracker {
         return timeRemaining !== null && timeRemaining.isWorkHours;
     }
 
-    public getEndTime(): Date | null {
-        const dayConfig = this.getCurrentDayConfig();
-        if (!dayConfig) {
-            return null;
-        }
-
-        const now = new Date();
-        const { hours: endHours, minutes: endMinutes } = this.parseTime(dayConfig.end);
-        const endTime = new Date(now);
-        endTime.setHours(endHours, endMinutes, TIME_CONSTANTS.ZERO_SECONDS, TIME_CONSTANTS.ZERO_MILLISECONDS);
-
-        return endTime;
+    public getEndTime(now?: Date): Date | null {
+        const timeRemaining = this.getTimeRemaining(now);
+        return timeRemaining ? timeRemaining.endTime : null;
     }
 
     public refreshConfig(): void {

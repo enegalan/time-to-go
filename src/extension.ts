@@ -48,22 +48,18 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const timeRemaining = timeTracker.getTimeRemaining();
-        const dayConfig = timeTracker.getCurrentDayConfig();
 
-        if (!dayConfig) {
+        if (!timeRemaining) {
             vscode.window.showInformationMessage(MESSAGES.NOT_CONFIGURED_DAY);
             return;
         }
 
-        if (!timeRemaining || !timeRemaining.isWorkHours) {
-            const endTime = timeTracker.getEndTime();
-            if (endTime) {
-                vscode.window.showInformationMessage(
-                    `${MESSAGES.OUTSIDE_WORK_HOURS}${dayConfig.start} - ${dayConfig.end}`
-                );
-            } else {
-                vscode.window.showInformationMessage(MESSAGES.NO_SCHEDULE);
-            }
+        if (!timeRemaining.isWorkHours) {
+            const schedule =
+                timeRemaining.start !== undefined && timeRemaining.end !== undefined
+                    ? `${timeRemaining.start} - ${timeRemaining.end}`
+                    : '';
+            vscode.window.showInformationMessage(`${MESSAGES.OUTSIDE_WORK_HOURS}${schedule}`);
             return;
         }
 
