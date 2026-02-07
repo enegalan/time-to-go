@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { TimeTracker } from './timeTracker';
 import { StatusBar } from './statusBar';
 import { Notifications } from './notifications';
-import { COMMANDS, CONFIG_NAMES, MESSAGES } from './constants';
+import { COMMANDS, CONFIG_NAMES, MESSAGES, TIME_DISPLAY } from './constants';
 
 let statusBar: StatusBar | null = null;
 let notifications: Notifications | null = null;
@@ -64,7 +64,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const { hours, minutes, seconds } = timeRemaining;
-        const message = `${MESSAGES.TIME_REMAINING}${hours}h ${minutes}m ${seconds}s${MESSAGES.END_TIME_LABEL}${timeRemaining.endTime.toLocaleTimeString()}`;
+        const endDisplay = timeRemaining.end ?? timeRemaining.endTime.toLocaleTimeString(undefined, TIME_DISPLAY.END_TIME_FORMAT_OPTIONS);
+        const message = `${MESSAGES.TIME_REMAINING}${hours}h ${minutes}m ${seconds}s${MESSAGES.END_TIME_LABEL}${endDisplay}`;
         vscode.window.showInformationMessage(message);
     });
 

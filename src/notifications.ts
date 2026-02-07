@@ -5,6 +5,7 @@ import {
     TIME_CONSTANTS,
     DEFAULT_VALUES,
     MESSAGES,
+    TIME_DISPLAY,
 } from './constants';
 
 interface PeriodicNotification {
@@ -88,7 +89,8 @@ export class Notifications {
     }
 
     private showNotification(timeRemaining: TimeRemaining, minutes: number): void {
-        const message = MESSAGES.NOTIFICATION_MINUTES_LEFT(minutes, timeRemaining.endTime.toLocaleTimeString());
+        const endDisplay = timeRemaining.end ?? timeRemaining.endTime.toLocaleTimeString(undefined, TIME_DISPLAY.END_TIME_FORMAT_OPTIONS);
+        const message = MESSAGES.NOTIFICATION_MINUTES_LEFT(minutes, endDisplay);
         vscode.window.showInformationMessage(message);
     }
 

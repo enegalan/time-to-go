@@ -27,6 +27,7 @@ export class StatusBar {
     private cachedFlashTimeSeparators: boolean = DEFAULT_VALUES.FLASH_TIME_SEPARATORS;
     private cachedTimeSeparatorOff: string = DEFAULT_VALUES.TIME_SEPARATOR_OFF;
     private cachedTimeFormat: TimeFormat = DEFAULT_VALUES.TIME_FORMAT;
+    private cachedEndHasSeconds: boolean = false;
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
@@ -54,11 +55,14 @@ export class StatusBar {
             DEFAULT_VALUES.TIME_SEPARATOR_OFF
         );
         this.cachedTimeFormat = this.config.get<TimeFormat>(CONFIG_NAMES.TIME_FORMAT, DEFAULT_VALUES.TIME_FORMAT);
+        const dayName = this.timeTracker.getCurrentDayName();
+        const endStr = this.config.get<string>(`${dayName}.end`, '');
+        this.cachedEndHasSeconds = /^\d{1,2}:\d{1,2}:\d{1,2}$/.test(String(endStr).trim());
     }
 
     private updateFrequencyFromFormat(): void {
         this.updateFrequency =
-            this.cachedShowSeconds || this.cachedFlashTimeSeparators
+            this.cachedShowSeconds || this.cachedFlashTimeSeparators || this.cachedEndHasSeconds
                 ? TIME_CONSTANTS.UPDATE_INTERVAL_WITH_SECONDS_MS
                 : TIME_CONSTANTS.DEFAULT_UPDATE_INTERVAL_MS;
     }
@@ -67,7 +71,8 @@ export class StatusBar {
         const { hours, minutes, seconds } = timeRemaining;
         const showHours = this.cachedShowHours;
         const showMinutes = this.cachedShowMinutes;
-        const showSeconds = this.cachedShowSeconds;
+        const configEndHasSeconds = /^\d{1,2}:\d{1,2}:\d{1,2}$/.test(String(timeRemaining.end ?? '').trim());
+        const showSeconds = this.cachedShowSeconds || configEndHasSeconds;
         const timeSeparator = this.cachedTimeSeparator;
         const flashTimeSeparators = this.cachedFlashTimeSeparators;
         const timeSeparatorOff = this.cachedTimeSeparatorOff;
@@ -131,7 +136,7 @@ export class StatusBar {
 
         const formattedTime = this.formatTime(timeRemaining, format);
         this.statusBarItem.text = `${STATUS_BAR.TEXT_PREFIX}${formattedTime}`;
-        this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${timeRemaining.endTime.toLocaleTimeString()}`;
+        this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${TimeTracker.formatTimeHHMMSS(timeRemaining.endTime)}`;
         this.statusBarItem.show();
     }
 

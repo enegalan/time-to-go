@@ -69,6 +69,7 @@ export const TIME_DISPLAY = {
     ZERO_MINUTES: '0m',
     ZERO_SECONDS: '0s',
     ZERO_TIME: '0',
+    END_TIME_FORMAT_OPTIONS: { hour: '2-digit', minute: '2-digit', second: '2-digit' } as Intl.DateTimeFormatOptions,
 } as const;
 
 export const DEFAULT_VALUES = {
