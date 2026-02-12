@@ -2,7 +2,7 @@
   "name": "time-to-go",
   "displayName": "Time to Go",
   "description": "Shows the remaining time until your end time in the status bar",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "enegalan",
   "license": "MIT",
   "repository": {
@@ -281,7 +281,7 @@
     "dev": "npm run watch"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
+    "@types/vscode": "^1.75.0",
     "@types/node": "16.x",
     "typescript": "^4.9.4",
     "@vscode/vsce": "^2.22.0"
