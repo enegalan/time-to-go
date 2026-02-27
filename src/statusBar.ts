@@ -83,7 +83,7 @@ export class StatusBar {
         }
 
         switch (format) {
-            case TIME_FORMATS.HUMAN_READABLE:
+            case TIME_FORMATS.HUMAN_READABLE: {
                 const parts: string[] = [];
                 if (showHours && hours > TIME_CONSTANTS.ZERO_TIME_VALUE) parts.push(`${hours}${TIME_DISPLAY.HOUR_SUFFIX}`);
                 if (showMinutes && minutes > TIME_CONSTANTS.ZERO_TIME_VALUE) parts.push(`${minutes}${TIME_DISPLAY.MINUTE_SUFFIX}`);
@@ -96,8 +96,8 @@ export class StatusBar {
                     return TIME_DISPLAY.ZERO_MINUTES;
                 }
                 return parts.join(TIME_DISPLAY.HUMAN_READABLE_SEPARATOR);
-
-            case TIME_FORMATS.TIME_FORMAT:
+            }
+            case TIME_FORMATS.TIME_FORMAT: {
                 const timeParts: string[] = [];
                 if (showHours) {
                     timeParts.push(String(hours));
@@ -119,7 +119,7 @@ export class StatusBar {
                     return TIME_DISPLAY.ZERO_TIME;
                 }
                 return timeParts.join(separator);
-
+            }
             default:
                 return `${hours}${TIME_DISPLAY.HOUR_SUFFIX} ${minutes}${TIME_DISPLAY.MINUTE_SUFFIX}`;
         }
