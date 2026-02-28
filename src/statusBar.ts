@@ -136,7 +136,7 @@ export class StatusBar {
 
         const formattedTime = this.formatTime(timeRemaining, format);
         this.statusBarItem.text = `${STATUS_BAR.TEXT_PREFIX}${formattedTime}`;
-        this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${TimeTracker.formatTimeHHMMSS(timeRemaining.endTime)}`;
+        this.statusBarItem.tooltip = `${STATUS_BAR.TOOLTIP_PREFIX}${this.timeTracker.formatTimeHHMMSS(timeRemaining.endTime)}`;
         this.statusBarItem.show();
     }
 

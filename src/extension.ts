@@ -81,15 +81,14 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push({
-        dispose: () => {
-            if (statusBar) statusBar.dispose();
-            if (notifications) notifications.dispose();
-        }
-    });
+    context.subscriptions.push({ dispose: cleanup });
 }
 
-export function deactivate() {
+export function deactivate(): void {
+    cleanup();
+}
+
+function cleanup(): void {
     if (statusBar) {
         statusBar.dispose();
         statusBar = null;

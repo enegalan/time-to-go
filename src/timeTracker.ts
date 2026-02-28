@@ -26,9 +26,7 @@ export class TimeTracker {
     }
 
     public getCurrentDayConfig(now?: Date): DayConfig | null {
-        const date = now ?? new Date();
-        const dayOfWeek = date.getDay();
-        const dayName = DAY_NAMES[dayOfWeek];
+        const dayName = this.getCurrentDayName(now);
 
         const enabled = this.config.get<boolean>(`${dayName}.enabled`, DEFAULT_VALUES.DAY_ENABLED);
         const start = this.config.get<string>(`${dayName}.start`, DEFAULT_VALUES.DAY_START_TIME);
@@ -46,34 +44,28 @@ export class TimeTracker {
         return DAY_NAMES[date.getDay()];
     }
 
-    /** Formats a Date as HH:MM:SS from its local time components. */
-    public static formatTimeHHMMSS(date: Date): string {
-        const h = date.getHours();
-        const m = date.getMinutes();
-        const s = date.getSeconds();
+    public formatTimeHHMMSS(date: Date): string {
         const pad = (n: number) => String(n).padStart(2, '0');
-        return `${pad(h)}:${pad(m)}:${pad(s)}`;
+        return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
-    /** Parses HH:MM or HH:MM:SS (colon or full-width colon). */
-    public static parseTime(timeStr: string): { hours: number; minutes: number; seconds: number } {
+    public parseTime(timeStr: string): { hours: number; minutes: number; seconds: number } {
         const str = String(timeStr ?? '').trim();
+
+        const parse = (value?: string, fallback = TIME_CONSTANTS.ZERO_TIME_VALUE) =>
+            parseInt(value ?? '', TIME_CONSTANTS.PARSE_INT_BASE) || fallback;
+
         const match = str.match(/^(\d{1,2})[:\uFF1A](\d{1,2})(?:[:\uFF1A](\d{1,2}))?$/);
-        if (!match) {
-            const fallback = str.split(/[:\uFF1A]/);
-            const hours = parseInt(fallback[0], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_TIME_VALUE;
-            const minutes = parseInt(fallback[1], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_TIME_VALUE;
-            const seconds = fallback.length >= 3
-                ? (parseInt(fallback[2], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_SECONDS)
-                : TIME_CONSTANTS.ZERO_SECONDS;
-            return { hours, minutes, seconds };
-        }
-        const hours = parseInt(match[1], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_TIME_VALUE;
-        const minutes = parseInt(match[2], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_TIME_VALUE;
-        const seconds = match[3] !== undefined
-            ? (parseInt(match[3], TIME_CONSTANTS.PARSE_INT_BASE) || TIME_CONSTANTS.ZERO_SECONDS)
-            : TIME_CONSTANTS.ZERO_SECONDS;
-        return { hours, minutes, seconds };
+
+        const parts = match
+            ? [match[1], match[2], match[3]]
+            : str.split(/[:\uFF1A]/);
+
+        return {
+            hours: parse(parts[0]),
+            minutes: parse(parts[1]),
+            seconds: parse(parts[2], TIME_CONSTANTS.ZERO_SECONDS),
+        };
     }
 
     public getTimeRemaining(now?: Date): TimeRemaining | null {
@@ -83,8 +75,8 @@ export class TimeTracker {
             return null;
         }
 
-        const { hours: startHours, minutes: startMinutes, seconds: startSeconds } = TimeTracker.parseTime(dayConfig.start);
-        const { hours: endHours, minutes: endMinutes, seconds: endSeconds } = TimeTracker.parseTime(dayConfig.end);
+        const { hours: startHours, minutes: startMinutes, seconds: startSeconds } = this.parseTime(dayConfig.start);
+        const { hours: endHours, minutes: endMinutes, seconds: endSeconds } = this.parseTime(dayConfig.end);
 
         const startTime = new Date(date);
         startTime.setHours(startHours, startMinutes, startSeconds, TIME_CONSTANTS.ZERO_MILLISECONDS);

@@ -7,7 +7,7 @@ Know exactly how much time you have left until you can leave working hours. Set 
 ## Features
 
 - Different schedule configuration for each day of the week
-- Real-time counter in the status bar with informative tooltip (start, end, elapsed, remaining)
+- Real-time counter in the status bar with tooltip showing end time
 - Multiple configurable display formats
 - Notifications before end time and when end time is reached
 
