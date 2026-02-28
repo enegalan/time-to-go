@@ -2,7 +2,7 @@
   "name": "time-to-go",
   "displayName": "Time to Go",
   "description": "Know exactly how much time you have left until you can leave working hours. Set your start and end times and see the countdown in your editor.",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "enegalan",
   "license": "MIT",
   "repository": {

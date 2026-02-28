@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { CONFIG_NAMES, DAY_NAMES, TIME_CONSTANTS, DEFAULT_VALUES } from './constants';
+import { DAY_NAMES, TIME_CONSTANTS, DEFAULT_VALUES } from './constants';
+import { getExtensionConfig } from './config';
 
 export interface DayConfig {
     enabled: boolean;
@@ -22,7 +23,7 @@ export class TimeTracker {
     private config: vscode.WorkspaceConfiguration;
 
     constructor() {
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
     }
 
     public getCurrentDayConfig(now?: Date): DayConfig | null {
@@ -128,6 +129,6 @@ export class TimeTracker {
     }
 
     public refreshConfig(): void {
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
     }
 }

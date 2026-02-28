@@ -9,6 +9,7 @@ import {
     DEFAULT_VALUES,
     COMMANDS,
 } from './constants';
+import { getExtensionConfig } from './config';
 
 export type TimeFormat = typeof TIME_FORMATS.HUMAN_READABLE | typeof TIME_FORMATS.TIME_FORMAT;
 
@@ -31,7 +32,7 @@ export class StatusBar {
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
         this.statusBarItem = vscode.window.createStatusBarItem(
             vscode.StatusBarAlignment.Right,
             STATUS_BAR.PRIORITY
@@ -184,7 +185,7 @@ export class StatusBar {
     }
 
     public refreshConfig(): void {
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
         this.refreshFormatCache();
         this.updateFrequencyFromFormat();
         const wasRunning = this.updateInterval !== null;

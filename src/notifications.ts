@@ -7,6 +7,7 @@ import {
     MESSAGES,
     TIME_DISPLAY,
 } from './constants';
+import { getExtensionConfig } from './config';
 
 interface PeriodicNotification {
     message: string;
@@ -26,11 +27,11 @@ export class Notifications {
 
     constructor(timeTracker: TimeTracker) {
         this.timeTracker = timeTracker;
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
         this.refreshPeriodicNotificationsCache();
     }
 
-    private shouldShowNotification(): boolean {
+    private isNotificationEnabled(): boolean {
         return this.config.get<boolean>(CONFIG_NAMES.NOTIFICATIONS_ENABLED, DEFAULT_VALUES.NOTIFICATIONS_ENABLED);
     }
 
@@ -44,7 +45,7 @@ export class Notifications {
     }
 
     public check(timeRemaining: TimeRemaining | null): void {
-        if (!this.shouldShowNotification()) {
+        if (!this.isNotificationEnabled()) {
             this.notificationSent = false;
             this.endTimeNotificationSent = false;
             this.wasInWorkHours = false;
@@ -130,16 +131,14 @@ export class Notifications {
         }
         const minIntervalSec = Math.min(...periodicNotifications.map((n) => n.interval));
         const minIntervalMs = minIntervalSec * TIME_CONSTANTS.MILLISECONDS_PER_SECOND;
-        const minCheckMs = 1000;
-        return Math.min(TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS, Math.max(minCheckMs, minIntervalMs));
+        return Math.min(TIME_CONSTANTS.NOTIFICATION_CHECK_INTERVAL_MS, Math.max(TIME_CONSTANTS.MILLISECONDS_PER_SECOND, minIntervalMs));
     }
 
     public start(): void {
         this.refreshPeriodicNotificationsCache();
         const checkIntervalMs = this.getCheckIntervalMs();
         this.checkInterval = setInterval(() => {
-            const timeRemaining = this.timeTracker.getTimeRemaining();
-            this.check(timeRemaining);
+            this.check(this.timeTracker.getTimeRemaining());
             this.checkPeriodicNotifications();
         }, checkIntervalMs);
     }
@@ -155,7 +154,7 @@ export class Notifications {
     }
 
     public refreshConfig(): void {
-        this.config = vscode.workspace.getConfiguration(CONFIG_NAMES.ROOT);
+        this.config = getExtensionConfig();
         this.refreshPeriodicNotificationsCache();
         this.notificationSent = false;
         this.endTimeNotificationSent = false;
