@@ -29,12 +29,12 @@ Configure your schedule in VS Code preferences (search for **Time to Go** or use
 
 ### Schedule (per day)
 
-| Setting                  | Value(s)                  | Description      | Example                | Default   |
-| ------------------------ | ------------------------- | ---------------- | ---------------------- | --------- |
-| `timeToGo.<day>.enabled` | **true**                  | Enable that day  | included in schedule   | **true**  |
-|                          | **false**                 | Disable that day | excluded from schedule |           |
-| `timeToGo.<day>.start`   | ``HH:MM`` or ``HH:MM:SS`` | Start time       | 09:00                  | **09:00** |
-| `timeToGo.<day>.end`     | ``HH:MM`` or ``HH:MM:SS`` | End time         | 18:00                  | **18:00** |
+| Setting                  | Value(s)              | Description      | Example                | Default   |
+| ------------------------ | --------------------- | ---------------- | ---------------------- | --------- |
+| `timeToGo.<day>.enabled` | **true**              | Enable that day  | included in schedule   | **true**  |
+|                          | **false**             | Disable that day | excluded from schedule |           |
+| `timeToGo.<day>.start`   | `HH:MM` or `HH:MM:SS` | Start time       | 09:00                  | **09:00** |
+| `timeToGo.<day>.end`     | `HH:MM` or `HH:MM:SS` | End time         | 18:00                  | **18:00** |
 
 
 ### Time display
@@ -62,4 +62,24 @@ Configure your schedule in VS Code preferences (search for **Time to Go** or use
 | `timeToGo.notificationMinutes`   | number                                        | Minutes before end time to show a notification                         | 30                  | **30**   |
 | `timeToGo.notificationsEnabled`  | **true**                                      | Notifications before end and "Time to go!" at end time                 | notifications shown | **true** |
 |                                  | **false**                                     | Notifications disabled                                                 | no notifications    |          |
-| `timeToGo.periodicNotifications` | array **message**, **interval** (s), **days** | Custom periodic notifications. Intervals under 60s use shortest check. |                     | **[]**   |
+| `timeToGo.periodicNotifications` | array of objects (see below) | Custom periodic notifications during work hours. Intervals under 60s use the shortest check. |                     | **[]**   |
+
+Each entry in **`timeToGo.periodicNotifications`** is an object with:
+
+| Property   | Type     | Description                                      | Example                          |
+| ---------- | -------- | ------------------------------------------------ | -------------------------------- |
+| **message**  | string   | Text shown in the notification                   | `"Take a break?"`                |
+| **interval** | number   | Seconds between notifications on the given days  | `3600` (every hour)              |
+| **days**     | string[] | Weekdays when this notification runs             | `["monday", "tuesday", "friday"]` |
+
+Example in `settings.json`:
+
+```json
+"timeToGo.periodicNotifications": [
+  {
+    "message": "Time for a break? 🥱",
+    "interval": 3600,
+    "days": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+  }
+]
+```
